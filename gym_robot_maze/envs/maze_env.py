@@ -21,11 +21,12 @@ class MazeEnv(Env):
         if self.is_render:
             self.maze_render = MazeRender(self.maze)
 
-        self.observation_space = spaces.Box(low=0, high=np.finfo(np.float32).max, shape=(1, 3), dtype=np.float32)
-        self.action_space = spaces.Discrete(5)
+        self.observation_space = spaces.Box(low=0, high=max(self.maze.get_size()[0], self.maze.get_size()[1]), shape=(1, 3), dtype=np.float32)
+        self.action_space = spaces.Discrete(4)
 
-        self.agent = Agent(pos=self.maze.get_start(), facing=180)
+        self.agent = Agent(pos=self.maze.get_start().copy(), facing=180)
         self.state = self.get_state() 
+        self.done = False
 
     def step(self, action):
         """
@@ -36,14 +37,10 @@ class MazeEnv(Env):
             returns a tuple of (reward: int, done: bool) where reward is the reward 
             for the agent and done is whether or not the goal state is reached
         """
+        #check action is within action space (a valid action)
         assert self.action_space.contains(action), "Invalid Action"
-        done = False
 
         if action == 0:
-            R = -100
-            #NOOP
-            
-        elif action == 1:
             R = -1
             vel = self.agent.move()
 
@@ -57,29 +54,40 @@ class MazeEnv(Env):
             #Update agents position
             self.agent.pos[0] += vel[0]
             self.agent.pos[1] += vel[1]
-            self.maze_render.update(self.agent.pos)
 
-        elif action == 2:
+            if self.is_render:
+                self.maze_render.update(self.agent.pos)
+
+        elif action == 1:
             R = -1
             self.agent.rotate(90)
-        elif action == 3:
+        elif action == 2:
             R = -1
             self.agent.rotate(180)
-        elif action == 4:
+        elif action == 3:
             R = -1
             self.agent.rotate(270)
     
         #Check for goal state
         if self.agent.pos[0] == self.maze.get_goal()[0] and self.agent.pos[1] == self.maze.get_goal()[1]:
-            done = True
+            self.done = True
             R = 500
 
-        return self.get_state(), R, done
+        info = {}
+
+        return self.get_state(), R, self.done, info
 
     def reset(self):
-        self.agent.pos = self.maze.get_start()
+        self.agent.pos = self.maze.get_start().copy()
+        
         self.agent.facing = 180
         self.done = False
+
+        if self.is_render:
+            self.maze_render.update(self.agent.pos)
+            self.maze_render.draw()
+
+        return self.get_state()
 
     def render(self, mode='human'):
         """
@@ -87,12 +95,15 @@ class MazeEnv(Env):
         """
         if self.is_render:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT: sys.exit()    
+                if event.type == pygame.QUIT: 
+                    self.maze_render.quit()
+                    sys.exit()
 
             self.maze_render.draw()
 
     def close(self):
-        None
+        if self.is_render:
+            self.maze_render.quit()
 
     def get_state(self):
         """
@@ -163,6 +174,7 @@ class Agent():
 
         return x, y
 
+#Testing
 if __name__ == '__main__':
     env = MazeEnv()
     m1 = env.maze
@@ -179,4 +191,7 @@ if __name__ == '__main__':
         if done == True:
             print("Done")
             break
+
+    env.close()
+
 

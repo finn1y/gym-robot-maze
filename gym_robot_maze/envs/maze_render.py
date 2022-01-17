@@ -45,6 +45,9 @@ class MazeRender:
 
         pygame.display.flip()
 
+    def quit(self):
+        pygame.quit()
+
 #Testing
 if __name__ == '__main__':
     m1 = Maze()
