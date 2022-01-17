@@ -20,7 +20,7 @@ class MazeEnv(Env):
         self.n_agents = n_agents
 
         if self.is_render:
-            self.maze_render = MazeRender(self.maze)
+            self.maze_render = MazeRender(self.maze, n_agents=self.n_agents)
 
         self.observation_space = spaces.Box(low=0, high=max(self.maze.get_size()[0], self.maze.get_size()[1]), shape=(1, 3), dtype=np.float32)
         self.action_space = spaces.Discrete(4)
@@ -44,6 +44,9 @@ class MazeEnv(Env):
             #check action is within action space (a valid action)
             assert self.action_space.contains(actions[i]), "Invalid Action"
 
+            #init reward to 0
+            R = 0
+
             if actions[i] == 0:
                 R = -1
                 vel = self.agents[i].move()
@@ -59,8 +62,8 @@ class MazeEnv(Env):
                 self.agents[i].pos[0] += vel[0]
                 self.agents[i].pos[1] += vel[1]
 
-            if self.is_render:
-                self.maze_render.update(self.agents[i].pos)
+                if self.is_render:
+                    self.maze_render.update(i, self.agents[i].pos)
 
             elif actions[i] == 1:
                 R = -1
@@ -91,7 +94,9 @@ class MazeEnv(Env):
         self.done = False
 
         if self.is_render:
-            self.maze_render.update(self.agent.pos)
+            for i in range(self.n_agents):
+                self.maze_render.update(i, self.agents[i].pos)
+
             self.maze_render.draw()
 
         return self.get_state()

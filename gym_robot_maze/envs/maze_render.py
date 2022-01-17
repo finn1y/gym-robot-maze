@@ -3,6 +3,8 @@
 import pygame
 import sys
 
+import numpy as np
+
 from gym_robot_maze.envs.maze import Maze
 
 class MazeRender:
@@ -19,14 +21,13 @@ class MazeRender:
         pygame.init()
         self.__screen = pygame.display.set_mode(size)
 
-    def update(self, agent_pos):
+    def update(self, agent_i: int, agent_pos: np.ndarray):
         """
             function to update maze render variables
 
             agent_pos is an array of the [x, y] coordinates of the agent
         """
-        for i in range(self.n_agents):
-            self._agent_pos[i] = agent_pos[i]
+        self._agent_pos[agent_i] = agent_pos
 
     def draw(self):
         """
