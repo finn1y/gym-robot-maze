@@ -9,11 +9,12 @@ class MazeRender:
     """
         Class to render a maze using pygame library
     """
-    def __init__(self, maze: Maze, size=(600, 600)):
+    def __init__(self, maze: Maze, size=(600, 600), n_agents=1):
         self.__maze = maze
-        self._agent_pos = self.__maze.get_start()
-        #Calculate scalar value to map maze coordinates onto pixels
-        self.__scalar = (size[0] / self.__maze.get_size()[0], size[1] / self.__maze.get_size()[1])
+        self._agent_pos = [self.__maze.get_start() for i in range(n_agents)]
+        #Calculate scaler value to map maze coordinates onto pixels
+        self.__scaler = (size[0] / self.__maze.get_size()[0], size[1] / self.__maze.get_size()[1])
+        self.n_agents = n_agents
 
         pygame.init()
         self.__screen = pygame.display.set_mode(size)
@@ -24,7 +25,8 @@ class MazeRender:
 
             agent_pos is an array of the [x, y] coordinates of the agent
         """
-        self._agent_pos = agent_pos
+        for i in range(self.n_agents):
+            self._agent_pos[i] = agent_pos[i]
 
     def draw(self):
         """
@@ -36,12 +38,14 @@ class MazeRender:
         BLUE = (0, 0, 225)
 
         for wall in self.__maze.get_wall():
-            pygame.draw.rect(self.__screen, WHITE, ((wall[0] * self.__scalar[0], wall[1] * self.__scalar[1]), (self.__scalar)))
+            pygame.draw.rect(self.__screen, WHITE, ((wall[0] * self.__scaler[0], wall[1] * self.__scaler[1]), (self.__scaler)))
 
-        pygame.draw.rect(self.__screen, RED, ((self.__maze.get_goal() * self.__scalar), (self.__scalar)))
-        #Radius of agent should be 1/3 of the scalar value in the smaller dimension
-        r = self.__scalar[0] / 3 if self.__scalar[0] < self.__scalar[1] else self.__scalar[1] / 3
-        pygame.draw.circle(self.__screen, BLUE, ((self._agent_pos[0] + 0.5) * self.__scalar[0], (self._agent_pos[1] + 0.5) * self.__scalar[1]), r)
+        pygame.draw.rect(self.__screen, RED, ((self.__maze.get_goal() * self.__scaler), (self.__scaler)))
+        #Radius of agent should be 1/3 of the scaler value in the smaller dimension
+        r = self.__scaler[0] / 3 if self.__scaler[0] < self.__scaler[1] else self.__scaler[1] / 3
+
+        for i in range(self.n_agents):
+            pygame.draw.circle(self.__screen, BLUE, ((self._agent_pos[i][0] + 0.5) * self.__scaler[0], (self._agent_pos[i][1] + 0.5) * self.__scaler[1]), r)
 
         pygame.display.flip()
 

@@ -13,10 +13,11 @@ from gym_robot_maze.envs.maze_render import MazeRender
 class MazeEnv(Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, is_render: bool=True):
+    def __init__(self, is_render: bool=True, n_agents=1):
         super(MazeEnv, self).__init__()
         self.maze = Maze()
         self.is_render = is_render
+        self.n_agents = n_agents
 
         if self.is_render:
             self.maze_render = MazeRender(self.maze)
@@ -24,11 +25,11 @@ class MazeEnv(Env):
         self.observation_space = spaces.Box(low=0, high=max(self.maze.get_size()[0], self.maze.get_size()[1]), shape=(1, 3), dtype=np.float32)
         self.action_space = spaces.Discrete(4)
 
-        self.agent = Agent(pos=self.maze.get_start().copy(), facing=180)
+        self.agents = [Agent(pos=self.maze.get_start().copy(), facing=180) for i in range(self.n_agents)]
         self.state = self.get_state() 
         self.done = False
 
-    def step(self, action):
+    def step(self, actions):
         """
             function to step the environment given an action
 
@@ -37,50 +38,56 @@ class MazeEnv(Env):
             returns a tuple of (reward: int, done: bool) where reward is the reward 
             for the agent and done is whether or not the goal state is reached
         """
-        #check action is within action space (a valid action)
-        assert self.action_space.contains(action), "Invalid Action"
+        Rs = []
 
-        if action == 0:
-            R = -1
-            vel = self.agent.move()
+        for i in range(self.n_agents):
+            #check action is within action space (a valid action)
+            assert self.action_space.contains(actions[i]), "Invalid Action"
 
-            #Check for collision with walls if move carried out
-            for wall in self.maze.get_wall():
-                if self.agent.pos[0] + vel[0] == wall[0] and self.agent.pos[1] + vel[1] == wall[1]:
-                    R = -50
-                    vel = (0, 0)
-                    break
+            if actions[i] == 0:
+                R = -1
+                vel = self.agents[i].move()
 
-            #Update agents position
-            self.agent.pos[0] += vel[0]
-            self.agent.pos[1] += vel[1]
+                #Check for collision with walls if move carried out
+                for wall in self.maze.get_wall():
+                    if self.agents[i].pos[0] + vel[0] == wall[0] and self.agents[i].pos[1] + vel[1] == wall[1]:
+                        R = -50
+                        vel = (0, 0)
+                        break
+
+                #Update agents position
+                self.agents[i].pos[0] += vel[0]
+                self.agents[i].pos[1] += vel[1]
 
             if self.is_render:
-                self.maze_render.update(self.agent.pos)
+                self.maze_render.update(self.agents[i].pos)
 
-        elif action == 1:
-            R = -1
-            self.agent.rotate(90)
-        elif action == 2:
-            R = -1
-            self.agent.rotate(180)
-        elif action == 3:
-            R = -1
-            self.agent.rotate(270)
+            elif actions[i] == 1:
+                R = -1
+                self.agents[i].rotate(90)
+            elif actions[i] == 2:
+                R = -1
+                self.agents[i].rotate(180)
+            elif actions[i] == 3:
+                R = -1
+                self.agents[i].rotate(270)
     
-        #Check for goal state
-        if self.agent.pos[0] == self.maze.get_goal()[0] and self.agent.pos[1] == self.maze.get_goal()[1]:
-            self.done = True
-            R = 500
+            #Check for goal state
+            if self.agents[i].pos[0] == self.maze.get_goal()[0] and self.agents[i].pos[1] == self.maze.get_goal()[1]:
+                self.done = True
+                R = 500
+            
+            Rs.append(R)
 
         info = {}
 
-        return self.get_state(), R, self.done, info
+        return self.get_state(), Rs, self.done, info
 
     def reset(self):
-        self.agent.pos = self.maze.get_start().copy()
+        for i in range(self.n_agents):
+            self.agents[i].pos = self.maze.get_start().copy()
+            self.agents[i].facing = 180
         
-        self.agent.facing = 180
         self.done = False
 
         if self.is_render:
@@ -111,36 +118,41 @@ class MazeEnv(Env):
 
             returns an array of [foward_dist, left_dist, right_dist] where each is the distance to the nearest wall in that direction
         """
-        #initiliase dists in each direction to the maximum possible value
-        dists = [self.maze.get_size()[1], self.maze.get_size()[0], self.maze.get_size()[1], self.maze.get_size()[0]]
+        states = []
 
-        for wall in self.maze.get_wall():
-            #dists of 0 are impossible as would be on top of agent
-            dist_y = 0
-            dist_x = 0
+        for i in range(self.n_agents):
+            #initiliase dists in each direction to the maximum possible value
+            dists = [self.maze.get_size()[1], self.maze.get_size()[0], self.maze.get_size()[1], self.maze.get_size()[0]]
 
-            #calculate distance of each wall in x and y direction
-            if self.agent.pos[0] == wall[0]:
-                dist_y = wall[1] - self.agent.pos[1]
-            if self.agent.pos[1] == wall[1]:
-                dist_x = wall[0] - self.agent.pos[0]
+            for wall in self.maze.get_wall():
+                #dists of 0 are impossible as would be on top of agent
+                dist_y = 0
+                dist_x = 0
+
+                #calculate distance of each wall in x and y direction
+                if self.agents[i].pos[0] == wall[0]:
+                    dist_y = wall[1] - self.agents[i].pos[1]
+                if self.agents[i].pos[1] == wall[1]:
+                    dist_x = wall[0] - self.agents[i].pos[0]
             
-            #if distance to wall is shorter than previous calculated then replace distance
-            if dist_y > 0 and dist_y < dists[2]:
-                dists[2] = dist_y 
-            elif dist_y < 0 and -dist_y < dists[0]:
-                dists[0] = -dist_y 
+                #if distance to wall is shorter than previous calculated then replace distance
+                if dist_y > 0 and dist_y < dists[2]:
+                    dists[2] = dist_y 
+                elif dist_y < 0 and -dist_y < dists[0]:
+                    dists[0] = -dist_y 
 
-            if dist_x > 0 and dist_x < dists[1]:
-                dists[1] = dist_x 
-            elif dist_x < 0 and -dist_x < dists[3]:
-                dists[3] = -dist_x 
+                if dist_x > 0 and dist_x < dists[1]:
+                    dists[1] = dist_x 
+                elif dist_x < 0 and -dist_x < dists[3]:
+                    dists[3] = -dist_x 
 
-        forward = dists[int(self.agent.facing / 90)]
-        left = dists[(int(self.agent.facing / 90) + 3) % 4]
-        right = dists[(int(self.agent.facing / 90) + 1) % 4]
+            forward = dists[int(self.agents[i].facing / 90)]
+            left = dists[(int(self.agents[i].facing / 90) + 3) % 4]
+            right = dists[(int(self.agents[i].facing / 90) + 1) % 4]
         
-        return np.array([forward, left, right], dtype=np.float32)
+            states.append(np.array([forward, left, right], dtype=np.float32))
+
+        return states
 
 class Agent():
     """
