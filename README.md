@@ -6,9 +6,13 @@ A maze environment designed for use with [open-ai gym](https://gym.openai.com/),
 
 1. Clone the repo
 ```
-git clone https://github.com/finn1y/gym-robot-maze
+git clone https://github.com/finn1y/gym-robot-maze 
 ```
-2. Install package
+2. Install depedencies
+```
+pip install -r requirements.txt
+```
+3. Install gym robot maze
 ```
 pip install -e ./gym-robot-maze
 ```
@@ -16,6 +20,6 @@ pip install -e ./gym-robot-maze
 ## References
 
 <a id="1">[1]</a>
-G. Brockman, V. Cheung, L. Pettersson et al, "OpenAI Gym", *arXiv:1606.01540v1 [cs.LG]*, 2016. Available: [link](https://arxiv.org/abs/1606.01540) [Accessed 2 Feb 2022]
+> G. Brockman, V. Cheung, L. Pettersson et al, "OpenAI Gym", *arXiv:1606.01540v1 [cs.LG]*, 2016. Available: [link](https://arxiv.org/abs/1606.01540) [Accessed 2 Feb 2022]
 
 
