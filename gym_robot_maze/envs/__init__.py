@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 from gym_robot_maze.envs.maze_env import MazeEnv
 from gym_robot_maze.envs.maze_render import MazeRender
