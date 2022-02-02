@@ -52,7 +52,8 @@ class Maze():
             cells = np.delete(cells, 0, axis=0)
 
 
-    #reference: https://weblog.jamisbuck.org/2011/1/12/maze-generation-recursive-division-algorithm
+    #algorithm based on the recursive division algorithm as described by Buck in:
+    #https://weblog.jamisbuck.org/2011/1/12/maze-generation-recursive-division-algorithm
     def div_cell(self, coord, size):
         """
             function to divide a cell into two smaller subcells by placing a wall randomly within it
