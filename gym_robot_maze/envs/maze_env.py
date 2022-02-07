@@ -21,8 +21,8 @@ class MazeEnv(Env):
 
         if self.is_render:
             self.maze_render = MazeRender(self.maze, n_agents=self.n_agents)
-
-        self.observation_space = spaces.Box(low=0, high=max(self.maze.get_size()[0], self.maze.get_size()[1]), shape=(1, 3), dtype=np.float32)
+        
+        self.observation_space = spaces.Box(low=np.zeros(3, dtype=np.float32), high=np.array([max(self.maze.get_size()[0], self.maze.get_size()[1]) for i in range(3)], dtype=np.float32), dtype=np.float32)
         self.action_space = spaces.Discrete(4)
 
         self.agents = [Agent(pos=self.maze.get_start().copy(), facing=180) for i in range(self.n_agents)]
