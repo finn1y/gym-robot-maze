@@ -114,11 +114,11 @@ class MazeEnv(Env):
             if self.agents[i].pos[0] == self.maze.get_goal()[0] and self.agents[i].pos[1] == self.maze.get_goal()[1]:
                 self.done = True
                 R = 500
-                
-                if self.save_robot_path:
-                    info["robot_path"] = self.robot_path
             
             Rs.append(R)
+
+            if self.save_robot_path:
+                info["robot_path"] = self.robot_path
 
         return self.get_state(), Rs, self.done, info
 
