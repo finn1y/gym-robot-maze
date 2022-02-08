@@ -3,7 +3,8 @@
 import numpy as np
 import gym
 import pygame
-import sys
+import pickle
+import sys, os
 import time
 
 from gym import Env, spaces
@@ -13,21 +14,51 @@ from gym_robot_maze.envs.maze_render import MazeRender
 class MazeEnv(Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, is_render: bool=True, n_agents=1):
+    def __init__(self, is_render: bool=False, n_agents: int=1, save_robot_path: bool=False, save_maze_path=None, load_maze_path=None):
+        """
+            function to initialise Maze Environmnt class
+
+            is_render is a bool to determine whether to render the maze using PyGame
+
+            n_agents is an int of the number of agents within the maze
+
+            save_robot_path is a bool to determine whether to return the agents' path through the maze once reaching the goal state
+
+            save_maze_path is a path to save the maze file to
+
+            load_maze_path is a path to a maze file to be loaded
+        """
         super(MazeEnv, self).__init__()
-        self.maze = Maze()
+        
+        #load maze from path if provided else generate random maze
+        if load_maze_path:
+            self.maze = self.load_maze(load_maze_path)
+        else:
+            self.maze = Maze()
+
+        #if save maze path provided save maze to path
+        if save_maze_path:
+            self.save_maze(save_maze_path)
+
         self.is_render = is_render
         self.n_agents = n_agents
+        self.save_robot_path = save_robot_path
 
         if self.is_render:
             self.maze_render = MazeRender(self.maze, n_agents=self.n_agents)
         
+        #observation space has three dimenstion [forward_dist, left_dist, right_dist] where each is the distance to the nearest wall in the direction
         self.observation_space = spaces.Box(low=np.zeros(3, dtype=np.float32), high=np.array([max(self.maze.get_size()[0], self.maze.get_size()[1]) for i in range(3)], dtype=np.float32), dtype=np.float32)
+        #action space has 4 discrete actions: move forward (0), turn right (1), turn around 180 (2), turn left (3) 
         self.action_space = spaces.Discrete(4)
 
         self.agents = [Agent(pos=self.maze.get_start().copy(), facing=180) for i in range(self.n_agents)]
         self.state = self.get_state() 
         self.done = False
+
+        if self.save_robot_path:
+            #array to record the path of the agents through the maze
+            self.robot_path = [[self.agents[i].pos.copy()] for i in range(self.n_agents)]
 
     def step(self, actions):
         """
@@ -38,6 +69,7 @@ class MazeEnv(Env):
             returns a tuple of (reward: int, done: bool) where reward is the reward 
             for the agent and done is whether or not the goal state is reached
         """
+        info = {}
         Rs = []
 
         for i in range(self.n_agents):
@@ -65,6 +97,9 @@ class MazeEnv(Env):
                 if self.is_render:
                     self.maze_render.update(i, self.agents[i].pos)
 
+                if self.save_robot_path:
+                    self.robot_path[i].append(self.agents[i].pos.copy())
+
             elif actions[i] == 1:
                 R = -1
                 self.agents[i].rotate(90)
@@ -79,10 +114,11 @@ class MazeEnv(Env):
             if self.agents[i].pos[0] == self.maze.get_goal()[0] and self.agents[i].pos[1] == self.maze.get_goal()[1]:
                 self.done = True
                 R = 500
+                
+                if self.save_robot_path:
+                    info["robot_path"] = self.robot_path
             
             Rs.append(R)
-
-        info = {}
 
         return self.get_state(), Rs, self.done, info
 
@@ -98,6 +134,9 @@ class MazeEnv(Env):
                 self.maze_render.update(i, self.agents[i].pos)
 
             self.maze_render.draw()
+
+        if self.save_robot_path:
+            self.robot_path = [[self.agents[i].pos.copy()] for i in range(self.n_agents)]
 
         return self.get_state()
 
@@ -159,6 +198,35 @@ class MazeEnv(Env):
 
         return states
 
+    def save_maze(self, path):
+        """
+            function to save maze to a pickel file
+
+            path is the path to the directory where the file will be saved
+        """
+        #make directory if not already exists
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        with open(f'{path}/maze.pkl', "wb") as handle:
+            pickle.dump(self.maze, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_maze(self, path):
+        """
+            function to load a maze into the environment from a picklefile
+
+            path is the path to the directory where the file to be loaded is
+
+            returns the Maze object of the loaded maze
+        """
+        if os.path.isfile(f'{path}/maze.pkl'):
+            with open(f'{path}/maze.pkl', "rb") as handle:
+                maze = pickle.load(handle)
+        else:
+            raise FileNotFoundError
+
+        return maze
+
 class Agent():
     """
         class to contain all agent variables
@@ -193,7 +261,7 @@ class Agent():
 
 #Testing
 if __name__ == '__main__':
-    env = MazeEnv()
+    env = MazeEnv(is_render=True, save_robot_path=True, save_maze_path="./test", load_maze_path="./test")
     m1 = env.maze
     size = m1.get_size()
 
@@ -201,12 +269,12 @@ if __name__ == '__main__':
     
     env.reset()
     for _ in range(10000):
-        observation, reward, done = env.step(env.action_space.sample())
-        print(observation)
+        observation, reward, done, info = env.step([env.action_space.sample()])
         env.render()
         
         if done == True:
             print("Done")
+            print(info["robot_path"])
             break
 
     env.close()
