@@ -3,6 +3,6 @@
 from gym.envs.registration import register
 
 register(
-    id="RobotMazev1",
+    id="RobotMaze-v1",
     entry_point="gym_robot_maze.envs:MazeEnv",
 )
