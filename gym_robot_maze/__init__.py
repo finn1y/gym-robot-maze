@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from gym.envs.registration import register
 
 register(
-    id="robot-maze-v0",
+    id="RobotMazev1",
     entry_point="gym_robot_maze.envs:MazeEnv",
 )

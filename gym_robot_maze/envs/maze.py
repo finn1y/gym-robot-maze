@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import numpy as np
 
@@ -7,39 +7,78 @@ class Maze():
         Maze class generates a random maze with minimum size 20x20 using recursive division algorithm
     """
     def __init__(self, max_size=[20, 20]):
-        self.__width = np.random.randint(10, high=max_size[0])
-        self.__height = np.random.randint(10, high=max_size[1])
+        self._width = np.random.randint(10, high=max_size[0])
+        self._height = np.random.randint(10, high=max_size[1])
         self.generate_walls()
-        self.__start = np.array([1, 1])
-        self.__goal = np.array([self.__width - 2, self.__height - 2])
+        self._start = np.array([1, 1])
+        self._goal = np.array([self.width - 2, self.height - 2])
 
-    def get_size(self):
-        return np.array([self.__width, self.__height])
+    #-----------------------------------------------------------------------------------
+    # Properties
+    #-----------------------------------------------------------------------------------
 
-    def get_start(self):
-        return self.__start
+    @property
+    def width(self):
+        return self._width
 
-    def get_goal(self):
-        return self.__goal
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def goal(self):
+        return self._goal
+
+    @property
+    def walls(self):
+        return self._walls
+
+    @walls.setter
+    def walls(self, val: np.ndarray):
+        if not isinstance(val, np.ndarray):
+            raise TypeError("Walls must be an array of wall coordinates.")
+        self._walls = val
+
+    @property
+    def holes(self):
+        return self._holes
+
+    @holes.setter
+    def holes(self, val: np.ndarray):
+        if not isinstance(val, np.ndarray):
+            raise TypeError("Holes must be an array of hole coordinates.")
+        self._holes = val
+
+    @property
+    def size(self):
+        return np.array([self.width, self.height])
+
+    #-----------------------------------------------------------------------------------
+    # Methods
+    #-----------------------------------------------------------------------------------
 
     def generate_walls(self):
         """
             function to generate walls within the maze
             uses recursive division algorithm
         """
-        self._walls = np.zeros((1, 2))
-        self._holes = np.zeros((1, 2))
+        self.walls = np.zeros((1, 2))
+        self.holes = np.zeros((1, 2))
 
         #Place walls around the edge of the maze
-        for i in range(self.__width):
-            self._walls = np.append(self._walls, np.array([[i, 0]]), axis=0)
-            self._walls = np.append(self._walls, np.array([[i, self.__height - 1]]), axis=0)
+        for i in range(self.width):
+            self.walls = np.append(self.walls, np.array([[i, 0]]), axis=0)
+            self.walls = np.append(self.walls, np.array([[i, self.height - 1]]), axis=0)
 
-        for i in range(1, self.__height - 1):
-            self._walls = np.append(self._walls, np.array([[0, i]]), axis=0)
-            self._walls = np.append(self._walls, np.array([[self.__width - 1, i]]), axis=0)
+        for i in range(1, self.height - 1):
+            self.walls = np.append(self.walls, np.array([[0, i]]), axis=0)
+            self.walls = np.append(self.walls, np.array([[self.width - 1, i]]), axis=0)
 
-        cells = np.array([[[1, 1], [self.__width - 2, self.__height - 2]]])
+        cells = np.array([[[1, 1], [self.width - 2, self.height - 2]]])
         
         while np.shape(cells)[0] > 0:
             div_cells = self.div_cell(cells[0][0], cells[0][1])
@@ -93,32 +132,29 @@ class Maze():
             place_wall = True
             
             #Check if wall to be placed will block an old hole
-            for hole in self._holes:
+            for hole in self.holes:
                 if np.linalg.norm(wall_coord - hole) <= 1:
                     place_wall = False
                     
-            #Only place._walls that will not block old._holes
+            #Only place walls that will not block old holes
             if place_wall:
-                self._walls = np.append(self._walls, [wall_coord], axis=0)
+                self.walls = np.append(self.walls, [wall_coord], axis=0)
 
-        self._holes = np.append(self._holes, [[hole_x, hole_y]], axis=0)
+        self.holes = np.append(self.holes, [[hole_x, hole_y]], axis=0)
 
         return (subcell_0, subcell_1)
 
-    def get_wall(self):
-        return self._walls
-        
 #Testing
 if __name__ == "__main__":
     m1 = Maze()
-    size = m1.get_size()
+    size = m1.size
 
     #Array to print to consol for visual representation of maze
     array = np.zeros((size[1], size[0]), dtype=int)
-    array[m1.get_start()[1]][m1.get_start()[0]] = 2
-    array[m1.get_goal()[1]][m1.get_goal()[0]] = 3
-    for wall in m1._walls:
+    array[m1.start[1]][m1.start[0]] = 2
+    array[m1.goal[1]][m1.goal[0]] = 3
+    for wall in m1.walls:
         array[int(wall[1])][int(wall[0])] = 1
 
-    print(f'{size[0]} x {size[1]} maze, start at {m1.get_start()}, goal at {m1.get_goal()}')
+    print(f'{size[0]} x {size[1]} maze, start at {m1.start}, goal at {m1.goal}')
     print(array)
