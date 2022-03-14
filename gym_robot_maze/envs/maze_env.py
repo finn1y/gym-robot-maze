@@ -293,7 +293,7 @@ class MazeEnv(Env):
                 self.done = True
                 R = 500
             
-            Rs.append(R)
+            Rs = R
     
         if self.save_robot_path:
             info["robot_path"] = self.robot_path
@@ -364,7 +364,7 @@ class MazeEnv(Env):
         if self.n_agents > 1:
             for i in range(self.n_agents):
                 dists = self._get_wall_dists(self.agents[i])
-                states.append(np.array([forward, left, right], dtype=np.float32))
+                states.append(dists)
         else:
             states = self._get_wall_dists(self.agents)
             
