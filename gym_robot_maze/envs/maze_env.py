@@ -359,12 +359,12 @@ class MazeEnv(Env):
 
             returns an array of [foward_dist, left_dist, right_dist] where each is the distance to the nearest wall in that direction
         """
-        states = []
+        states = np.zeros((self.n_agents, 3))
         
         if self.n_agents > 1:
             for i in range(self.n_agents):
                 dists = self._get_wall_dists(self.agents[i])
-                states.append(dists)
+                states[i] = dists
         else:
             states = self._get_wall_dists(self.agents)
             
