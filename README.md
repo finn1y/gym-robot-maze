@@ -35,7 +35,7 @@ $$R = \begin{cases}
 500 & if s' = s_{goal}\\
 -50 & if s' = s\\
 -1 & otherwise
-\end(cases)$$
+\end{cases}$$
 
 #### Goal State
 
