@@ -29,13 +29,7 @@ Note: although the max value is technically infinite it is limited to the size o
 
 #### Reward
 
-The agent receives a reward of -1 for every action taken. If the action results in a collision with a wall then the reward is reduced to -50 to deter the agent from colliding with walls. If the agent reaches the goal state then the reward is increased to 500 to stimulate the agent in reaching the goal. This can be summed up in the following equation:
-
-$$R = \begin{cases}
-500 & (if s' = s_{goal})\\
--50 & (if s' = s)\\
--1 & (otherwise)
-\end{cases}$$
+The agent receives a reward of -1 for every action taken. If the action results in a collision with a wall then the reward is reduced to -50 to deter the agent from colliding with walls. If the agent reaches the goal state then the reward is increased to 500 to stimulate the agent in reaching the goal.
 
 #### Goal State
 
