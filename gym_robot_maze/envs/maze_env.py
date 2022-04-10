@@ -219,7 +219,7 @@ class MazeEnv(Env):
                     #Check for collision with walls if move carried out
                     for wall in self.maze.walls:
                         if self.agents[i].pos[0] + vel[0] == wall[0] and self.agents[i].pos[1] + vel[1] == wall[1]:
-                            R = -50
+                            R = -2
                             vel = (0, 0)
                             break
 
@@ -246,7 +246,7 @@ class MazeEnv(Env):
                 #Check for goal state
                 if self.agents[i].pos[0] == self.maze.goal[0] and self.agents[i].pos[1] == self.maze.goal[1]:
                     self.done = True
-                    R = 500
+                    R = 100
             
                 Rs.append(R)
         else:
